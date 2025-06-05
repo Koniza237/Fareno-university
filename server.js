@@ -1,4 +1,3 @@
-```javascript
 const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
@@ -399,4 +398,3 @@ app.use((req, res) => {
 app.listen(port, () => {
     console.log('Server listening on port ' + port);
 });
-```
