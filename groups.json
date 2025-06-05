@@ -1,0 +1,10 @@
+```json
+[
+    {
+        "id": 1,
+        "name": "Groupe A",
+        "student_count": 30,
+        "subjects": "Mathématiques, Physique"
+    }
+]
+```
