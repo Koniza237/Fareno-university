@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="FARENOUNIVERSITY.jpg" type="image/x-icon">
+    <title>Gestion des Ressources - Fareno University</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            background-image: url('75ca7cbd-47b3-44e2-bc28-0a529f4c5af6.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: rgba(30, 30, 30, 0.95);
+            padding: 2rem 1rem;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-250px);
+        }
+
+        .sidebar img {
+            width: 150px;
+            display: block;
+            margin: 0 auto 2rem auto;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #4CAF50;
+            color: #ffffff;
+        }
+
+        .sidebar a.logout {
+            color: #ff4d4d;
+        }
+
+        .sidebar a.logout:hover {
+            background-color: #ff4d4d;
+            color: #ffffff;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            width: calc(100% - 250px);
+            background-color: rgba(30, 30, 30, 0.85);
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #4CAF50;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: #4CAF50;
+            color: #ffffff;
+        }
+
+        .tab:hover {
+            background-color: #45a049;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #3a3a3a;
+            color: #ffffff;
+            font-size: 1rem;
+            width: 250px;
+            outline: none;
+        }
+
+        .add-btn {
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+
+        .resource-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .resource-table th, .resource-table td {
+            padding: 1rem;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .resource-table th {
+            background-color: #4CAF50;
+            color: #ffffff;
+        }
+
+        .resource-table td {
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .resource-table button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .edit-btn {
+            background-color: #4CAF50;
+            color: #ffffff;
+            margin-right: 0.5rem;
+        }
+
+        .edit-btn:hover {
+            background-color: #45a049;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+            color: #ffffff;
+        }
+
+        .delete-btn:hover {
+            background-color: #e04343;
+        }
+
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background-color: #4CAF50;
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .form-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .form-container {
+            background: #2a2a2a;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .form-container h2 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+        }
+
+        .form-container input,
+        .form-container select {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #3a3a3a;
+            color: #ffffff;
+            font-size: 1rem;
+            display: none;
+        }
+
+        .form-container input.visible,
+        .form-container select.visible {
+            display: block;
+        }
+
+        .form-container button {
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .form-container button.cancel {
+            background-color: #ff4d4d;
+            margin-left: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-250px);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1.5rem;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 1rem;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .search-bar input {
+                width: 100%;
+            }
+
+            .resource-table th, .resource-table td {
+                font-size: 0.9rem;
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+        <nav class="sidebar" id="sidebar">
+            <img src="FARENOUNIVERSITY.jpg" alt="Fareno University Logo">
+            <a href="dashboard.html">Tableau de Bord</a>
+            <a href="gestion-ressources.html">Gestion des Ressources</a>
+            <a href="saisie-contraintes.html">Saisie des Contraintes</a>
+            <a href="visualisation.html">Visualisation</a>
+            <a href="exportation.html">Exportation</a>
+            <a href="administration.html">Administration</a>
+            <a href="profil.html">Profil</a>
+            <a href="aide.html">Aide</a>
+            <a href="index.html" class="logout">Déconnexion</a>
+        </nav>
+        <main class="main-content">
+            <h1>Gestion des Ressources</h1>
+            <div class="tabs">
+                <div class="tab active" onclick="openTab('teachers')">Enseignants</div>
+                <div class="tab" onclick="openTab('groups')">Groupes</div>
+                <div class="tab" onclick="openTab('rooms')">Salles</div>
+            </div>
+            <div id="teachers" class="tab-content active">
+                <div class="actions">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Rechercher un enseignant..." onkeyup="filterResources('teachers')">
+                    </div>
+                    <button class="add-btn" onclick="openAddForm('teachers')">Ajouter un Enseignant</button>
+                </div>
+                <table class="resource-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Matières Enseignées</th>
+                            <th>Disponibilités</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachers-table-body">
+                        <!-- Les données seront insérées dynamiquement via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="groups" class="tab-content">
+                <div class="actions">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Rechercher un groupe..." onkeyup="filterResources('groups')">
+                    </div>
+                    <button class="add-btn" onclick="openAddForm('groups')">Ajouter un Groupe</button>
+                </div>
+                <table class="resource-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Nombre d'Étudiants</th>
+                            <th>Matières Suivies</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groups-table-body">
+                        <!-- Les données seront insérées dynamiquement via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="rooms" class="tab-content">
+                <div class="actions">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Rechercher une salle..." onkeyup="filterResources('rooms')">
+                    </div>
+                    <button class="add-btn" onclick="openAddForm('rooms')">Ajouter une Salle</button>
+                </div>
+                <table class="resource-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Capacité</th>
+                            <th>Équipements</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rooms-table-body">
+                        <!-- Les données seront insérées dynamiquement via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Formulaire dynamique pour ajouter/modifier -->
+            <div id="form-overlay" class="form-overlay">
+                <div class="form-container">
+                    <h2 id="form-title"></h2>
+                    <form id="resource-form">
+                        <input type="hidden" id="resource-id" name="id">
+                        <input type="text" id="name" name="name" placeholder="Nom" class="visible" required>
+                        <input type="email" id="email" name="email" placeholder="Email" class="visible">
+                        <input type="text" id="subjects" name="subjects" placeholder="Matières Enseignées" class="visible">
+                        <input type="text" id="availability" name="availability" placeholder="Disponibilités" class="visible">
+                        <input type="number" id="student_count" name="student_count" placeholder="Nombre d'Étudiants" class="visible">
+                        <input type="text" id="group_subjects" name="subjects" placeholder="Matières Suivies" class="visible">
+                        <input type="number" id="capacity" name="capacity" placeholder="Capacité" class="visible">
+                        <input type="text" id="equipment" name="equipment" placeholder="Équipements" class="visible">
+                        <button type="submit">Enregistrer</button>
+                        <button type="button" class="cancel" onclick="closeForm()">Annuler</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function openTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            loadResources(tabName);
+        }
+
+        function filterResources(type) {
+            const input = document.querySelector(`#${type} .search-bar input`).value.toLowerCase();
+            const rows = document.querySelectorAll(`#${type}-table-body tr`);
+
+            rows.forEach(row => {
+                const name = row.cells[0].textContent.toLowerCase();
+                row.style.display = name.includes(input) ? '' : 'none';
+            });
+        }
+
+        async function loadResources(type) {
+            try {
+                const response = await fetch(`/api/${type}`);
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
+                const data = await response.json();
+                const tableBody = document.getElementById(`${type}-table-body`);
+                tableBody.innerHTML = '';
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    if (type === 'teachers') {
+                        row.innerHTML = `
+                            <td>${item.name}</td>
+                            <td>${item.email}</td>
+                            <td>${item.subjects || 'N/A'}</td>
+                            <td>${item.availability || 'N/A'}</td>
+                            <td>
+                                <button class="edit-btn" onclick="openEditForm('teachers', ${item.id}, '${item.name}', '${item.email}', '${item.subjects || ''}', '${item.availability || ''}')">Modifier</button>
+                                <button class="delete-btn" onclick="deleteResource('teachers', ${item.id})">Supprimer</button>
+                            </td>
+                        `;
+                    } else if (type === 'groups') {
+                        row.innerHTML = `
+                            <td>${item.name}</td>
+                            <td>${item.student_count || 'N/A'}</td>
+                            <td>${item.subjects || 'N/A'}</td>
+                            <td>
+                                <button class="edit-btn" onclick="openEditForm('groups', ${item.id}, '${item.name}', '${item.student_count || ''}', '${item.subjects || ''}')">Modifier</button>
+                                <button class="delete-btn" onclick="deleteResource('groups', ${item.id})">Supprimer</button>
+                            </td>
+                        `;
+                    } else if (type === 'rooms') {
+                        row.innerHTML = `
+                            <td>${item.name}</td>
+                            <td>${item.capacity || '0'}</td>
+                            <td>${item.equipment || 'N/A'}</td>
+                            <td>
+                                <button class="edit-btn" onclick="openEditForm('rooms', ${item.id}, '${item.name}', '${item.capacity || ''}', '${item.equipment || ''}')">Modifier</button>
+                                <button class="delete-btn" onclick="deleteResource('rooms', ${item.id})">Supprimer</button>
+                            </td>
+                        `;
+                    }
+                    tableBody.appendChild(row);
+                });
+
+                filterResources(type);
+            } catch (error) {
+                console.error(`Erreur lors du chargement des ${type}:`, error);
+                alert(`Erreur lors du chargement des ${type}`);
+                document.getElementById(`${type}-table-body`).innerHTML =
+                    `<tr><td colspan="${type === 'teachers' ? 5 : 4}" style="text-align: center;">Erreur lors du chargement.</td></tr>`;
+            }
+        }
+
+        function toggleFormFields(type, show) {
+            const fields = {
+                name: document.getElementById('name'),
+                email: document.getElementById('email'),
+                subjects: document.getElementById('subjects'),
+                availability: document.getElementById('availability'),
+                student_count: document.getElementById('student_count'),
+                group_subjects: document.getElementById('group_subjects'),
+                capacity: document.getElementById('capacity'),
+                equipment: document.getElementById('equipment')
+            };
+
+            // Masquer tous les champs par défaut
+            Object.values(fields).forEach(field => field.classList.remove('visible'));
+
+            // Afficher uniquement les champs pertinents
+            fields.name.classList.add('visible');
+            if (type === 'teachers') {
+                fields.email.classList.add('visible');
+                fields.subjects.classList.add('visible');
+                fields.availability.classList.add('visible');
+            } else if (type === 'groups') {
+                fields.student_count.classList.add('visible');
+                fields.group_subjects.classList.add('visible');
+            } else if (type === 'rooms') {
+                fields.capacity.classList.add('visible');
+                fields.equipment.classList.add('visible');
+            }
+        }
+
+        function openAddForm(type) {
+            const formOverlay = document.getElementById('form-overlay');
+            const formTitle = document.getElementById('form-title');
+            const form = document.getElementById('resource-form');
+
+            formOverlay.style.display = 'flex';
+            formTitle.textContent = `Ajouter un ${type === 'teachers' ? 'Enseignant' : type === 'groups' ? 'Groupe' : 'Salle'}`;
+            document.getElementById('resource-id').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('subjects').value = '';
+            document.getElementById('availability').value = '';
+            document.getElementById('student_count').value = '';
+            document.getElementById('group_subjects').value = '';
+            document.getElementById('capacity').value = '';
+            document.getElementById('equipment').value = '';
+
+            toggleFormFields(type, true);
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                saveResource(type);
+            };
+        }
+
+        function openEditForm(type, id, name, extra1, extra2, extra3) {
+            const formOverlay = document.getElementById('form-overlay');
+            const formTitle = document.getElementById('form-title');
+            const form = document.getElementById('resource-form');
+
+            formOverlay.style.display = 'flex';
+            formTitle.textContent = `Modifier un ${type === 'teachers' ? 'Enseignant' : type === 'groups' ? 'Groupe' : 'Salle'}`;
+            document.getElementById('resource-id').value = id;
+            document.getElementById('name').value = name;
+
+            toggleFormFields(type, true);
+
+            if (type === 'teachers') {
+                document.getElementById('email').value = extra1;
+                document.getElementById('subjects').value = extra2;
+                document.getElementById('availability').value = extra3 || '';
+            } else if (type === 'groups') {
+                document.getElementById('student_count').value = extra1;
+                document.getElementById('group_subjects').value = extra2 || '';
+            } else if (type === 'rooms') {
+                document.getElementById('capacity').value = extra1;
+                document.getElementById('equipment').value = extra2 || '';
+            }
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                saveResource(type);
+            };
+        }
+
+        async function saveResource(type) {
+            const id = document.getElementById('resource-id').value;
+            const name = document.getElementById('name').value;
+            if (!name) {
+                alert('Le nom est requis.');
+                return;
+            }
+
+            let data = { id, name };
+            let requiredFieldsFilled = true;
+
+            if (type === 'teachers') {
+                data.email = document.getElementById('email').value;
+                data.subjects = document.getElementById('subjects').value;
+                data.availability = document.getElementById('availability').value || null;
+                if (!data.email || !data.subjects) requiredFieldsFilled = false;
+            } else if (type === 'groups') {
+                data.student_count = parseInt(document.getElementById('student_count').value) || null;
+                data.subjects = document.getElementById('group_subjects').value || null;
+                if (!data.student_count) requiredFieldsFilled = false;
+            } else if (type === 'rooms') {
+                data.capacity = parseInt(document.getElementById('capacity').value) || null;
+                data.equipment = document.getElementById('equipment').value || null;
+                if (!data.capacity) requiredFieldsFilled = false;
+            }
+
+            if (!requiredFieldsFilled) {
+                alert('Veuillez remplir tous les champs obligatoires.');
+                return;
+            }
+
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const response = await fetch(`/api/${type}`, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
+                const result = await response.json();
+                alert(result.message || 'Enregistrement réussi');
+                closeForm();
+                loadResources(type);
+            } catch (error) {
+                console.error(`Erreur lors de l'enregistrement de ${type}:`, error);
+                alert(`Erreur lors de l'enregistrement : ${error.message}`);
+            }
+        }
+
+        async function deleteResource(type, id) {
+            if (!confirm(`Voulez-vous vraiment supprimer cet ${type === 'teachers' ? 'enseignant' : type === 'groups' ? 'groupe' : 'salle'} ? Cette action est irréversible.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/${type}/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
+                const result = await response.json();
+                alert(result.message || 'Suppression réussie');
+                loadResources(type);
+            } catch (error) {
+                console.error(`Erreur lors de la suppression de ${type}:`, error);
+                alert(`Erreur lors de la suppression : ${error.message}`);
+            }
+        }
+
+        function closeForm() {
+            document.getElementById('form-overlay').style.display = 'none';
+            toggleFormFields('', false);
+        }
+
+        // Charger les données au démarrage
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.querySelector('#teachers').classList.contains('active')) {
+                loadResources('teachers');
+            }
+        });
+    </script>
+</body>
+</html>
