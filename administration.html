@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -80,23 +79,6 @@
             min-height: 100vh;
             opacity: 0;
             animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        .message {
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .message.success {
-            background-color: #4CAF50;
-            color: #ffffff;
-        }
-
-        .message.error {
-            background-color: #ff4d4d;
-            color: #ffffff;
         }
 
         h1 {
@@ -221,6 +203,19 @@
             z-index: 1000;
         }
 
+        .delete-btn {
+            background-color: #ff4d4d;
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #e04343;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -303,7 +298,6 @@
                 <div class="tab" onclick="openTab('adjustments')">Ajustements Manuels</div>
             </div>
             <div id="logs" class="tab-content active">
-                <div class="message" id="logs-message"></div>
                 <div class="actions">
                     <div class="search-bar">
                         <input type="text" placeholder="Rechercher dans les logs..." onkeyup="filterLogs()">
@@ -320,31 +314,32 @@
                             </tr>
                         </thead>
                         <tbody id="log-table-body">
-                            <!-- Les logs seront chargés dynamiquement -->
+                            <!-- Données chargées dynamiquement -->
                         </tbody>
                     </table>
                 </div>
             </div>
             <div id="adjustments" class="tab-content">
-                <div class="message" id="adjustments-message"></div>
                 <div class="actions">
                     <div class="search-bar">
                         <input type="text" placeholder="Rechercher un ajustement..." onkeyup="filterAdjustments()">
                     </div>
-                    <button class="apply-btn" onclick="applyAdjustments()">Appliquer Ajustements</button>
+                    <button class="apply-btn" onclick="saveAdjustments()">Appliquer Ajustements</button>
                 </div>
                 <div class="adjustment-form">
                     <table>
                         <thead>
                             <tr>
                                 <th>Ressource</th>
+                                <th>Type</th>
                                 <th>Jour</th>
                                 <th>Heure</th>
-                                <th>Nouvelle Valeur</th>
+                                <th>Type de Contrainte</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="adjustments-table-body">
-                            <!-- Les contraintes seront chargées dynamiquement -->
+                        <tbody id="adjustment-table-body">
+                            <!-- Données chargées dynamiquement -->
                         </tbody>
                     </table>
                 </div>
@@ -353,160 +348,205 @@
     </div>
 
     <script>
-        // URL de l'API (ajustée pour votre environnement, à confirmer)
-        const API_URL = 'https://ep-steep-hat-a8yxx3sa-pooler.eastus2.azure.neon.tech/api';
+        const API_BASE_URL = 'http://localhost:10000/api';
 
-        // Charger les logs dynamiquement
-        async function loadLogs() {
-            try {
-                const response = await fetch(`${API_URL}/logs`);
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des logs');
-                }
-                const logs = await response.json();
-                const logTableBody = document.getElementById('log-table-body');
-                logTableBody.innerHTML = ''; // Vider le tableau
-                logs.forEach(log => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${log.date}</td>
-                        <td>${log.user}</td>
-                        <td>${log.action}</td>
-                        <td>${log.details}</td>
-                    `;
-                    logTableBody.appendChild(row);
-                });
-                showMessage('logs-message', 'success', 'Logs chargés avec succès');
-            } catch (error) {
-                showMessage('logs-message', 'error', `Erreur: ${error.message}`);
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function openTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'logs') {
+                loadLogs();
+            } else if (tabName === 'adjustments') {
+                loadAdjustments();
             }
         }
 
-        // Charger les contraintes dynamiquement pour l'onglet Ajustements
-        async function loadConstraints() {
+        async function loadLogs() {
+            // Simuler les logs en utilisant les contraintes comme source
             try {
-                const response = await fetch(`${API_URL}/constraints`);
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des contraintes');
-                }
+                const response = await fetch(`${API_BASE_URL}/constraints`);
                 const constraints = await response.json();
-                const adjustmentsTableBody = document.getElementById('adjustments-table-body');
-                adjustmentsTableBody.innerHTML = ''; // Vider le tableau
+                const logTableBody = document.getElementById('log-table-body');
+                logTableBody.innerHTML = '';
+
                 constraints.forEach(constraint => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><input type="text" name="resource" value="${constraint.resource_name}"></td>
-                        <td><select name="day">
+                        <td>${new Date().toLocaleString()}</td>
+                        <td>${constraint.resource_name}</td>
+                        <td>Ajout/Modification de contrainte</td>
+                        <td>${constraint.constraint_type} pour ${constraint.resource_type} à ${constraint.day} ${constraint.time}</td>
+                    `;
+                    logTableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erreur lors du chargement des logs:', error);
+                alert('Erreur lors du chargement des logs.');
+            }
+        }
+
+        async function loadAdjustments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/constraints`);
+                const constraints = await response.json();
+                const adjustmentTableBody = document.getElementById('adjustment-table-body');
+                adjustmentTableBody.innerHTML = '';
+
+                constraints.forEach(constraint => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="text" value="${constraint.resource_name}" data-id="${constraint.id}" data-field="resource_name"></td>
+                        <td><select data-id="${constraint.id}" data-field="resource_type">
+                            <option value="teacher" ${constraint.resource_type === 'teacher' ? 'selected' : ''}>Enseignant</option>
+                            <option value="room" ${constraint.resource_type === 'room' ? 'selected' : ''}>Salle</option>
+                            <option value="group" ${constraint.resource_type === 'group' ? 'selected' : ''}>Groupe</option>
+                        </select></td>
+                        <td><select data-id="${constraint.id}" data-field="day">
                             <option value="lundi" ${constraint.day === 'lundi' ? 'selected' : ''}>Lundi</option>
                             <option value="mardi" ${constraint.day === 'mardi' ? 'selected' : ''}>Mardi</option>
                             <option value="mercredi" ${constraint.day === 'mercredi' ? 'selected' : ''}>Mercredi</option>
                             <option value="jeudi" ${constraint.day === 'jeudi' ? 'selected' : ''}>Jeudi</option>
                             <option value="vendredi" ${constraint.day === 'vendredi' ? 'selected' : ''}>Vendredi</option>
                         </select></td>
-                        <td><input type="time" name="time" value="${constraint.time}"></td>
-                        <td><input type="text" name="new_value" value="${constraint.constraint_type}"></td>
+                        <td><input type="time" value="${constraint.time}" data-id="${constraint.id}" data-field="time"></td>
+                        <td><select data-id="${constraint.id}" data-field="constraint_type">
+                            <option value="Indisponibilité" ${constraint.constraint_type === 'Indisponibilité' ? 'selected' : ''}>Indisponibilité</option>
+                            <option value="Préférence" ${constraint.constraint_type === 'Préférence' ? 'selected' : ''}>Préférence</option>
+                        </select></td>
+                        <td><button class="delete-btn" onclick="deleteConstraint(${constraint.id})">Supprimer</button></td>
                     `;
-                    adjustmentsTableBody.appendChild(row);
+                    adjustmentTableBody.appendChild(row);
                 });
-                showMessage('adjustments-message', 'success', 'Contraintes chargées avec succès');
+
+                // Ajouter une ligne vide pour une nouvelle contrainte
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input type="text" placeholder="Nom de la ressource" data-field="resource_name"></td>
+                    <td><select data-field="resource_type">
+                        <option value="teacher">Enseignant</option>
+                        <option value="room">Salle</option>
+                        <option value="group">Groupe</option>
+                    </select></td>
+                    <td><select data-field="day">
+                        <option value="lundi">Lundi</option>
+                        <option value="mardi">Mardi</option>
+                        <option value="mercredi">Mercredi</option>
+                        <option value="jeudi">Jeudi</option>
+                        <option value="vendredi">Vendredi</option>
+                    </select></td>
+                    <td><input type="time" data-field="time"></td>
+                    <td><select data-field="constraint_type">
+                        <option value="Indisponibilité">Indisponibilité</option>
+                        <option value="Préférence">Préférence</option>
+                    </select></td>
+                    <td></td>
+                `;
+                adjustmentTableBody.appendChild(newRow);
             } catch (error) {
-                showMessage('adjustments-message', 'error', `Erreur: ${error.message}`);
+                console.error('Erreur lors du chargement des contraintes:', error);
+                alert('Erreur lors du chargement des contraintes.');
             }
         }
 
-        // Appliquer les ajustements manuels
-        async function applyAdjustments() {
-            const rows = document.querySelectorAll('#adjustments-table-body tr');
-            const adjustments = [];
-            rows.forEach(row => {
-                const resource = row.querySelector('input[name="resource"]').value;
-                const day = row.querySelector('select[name="day"]').value;
-                const time = row.querySelector('input[name="time"]').value;
-                const new_value = row.querySelector('input[name="new_value"]').value;
-                if (resource && day && time && new_value) {
-                    adjustments.push({ resource, day, time, new_value });
+        async function saveAdjustments() {
+            const rows = document.querySelectorAll('#adjustment-table-body tr');
+            for (const row of rows) {
+                const id = row.querySelector('input[data-field="resource_name"]')?.dataset.id;
+                const resource_name = row.querySelector('input[data-field="resource_name"]').value;
+                const resource_type = row.querySelector('select[data-field="resource_type"]').value;
+                const day = row.querySelector('select[data-field="day"]').value;
+                const time = row.querySelector('input[data-field="time"]').value;
+                const constraint_type = row.querySelector('select[data-field="constraint_type"]').value;
+
+                if (!resource_name || !resource_type || !day || !time || !constraint_type) {
+                    continue; // Ignorer les lignes incomplètes
                 }
-            });
 
-            if (adjustments.length === 0) {
-                showMessage('adjustments-message', 'error', 'Aucun ajustement valide à appliquer');
-                return;
+                const data = {
+                    resource_type,
+                    resource_id: id ? parseInt(id) : 0, // Utiliser 0 pour nouvelle contrainte
+                    resource_name,
+                    day,
+                    time,
+                    constraint_type
+                };
+
+                try {
+                    if (id) {
+                        // Mise à jour
+                        data.id = parseInt(id);
+                        const response = await fetch(`${API_BASE_URL}/constraints`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                        if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+                    } else {
+                        // Création
+                        const response = await fetch(`${API_BASE_URL}/constraints`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                        if (!response.ok) throw new Error('Erreur lors de la création');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la sauvegarde:', error);
+                    alert('Erreur lors de la sauvegarde des ajustements.');
+                    return;
+                }
             }
+            alert('Ajustements sauvegardés avec succès.');
+            loadAdjustments();
+        }
 
+        async function deleteConstraint(id) {
             try {
-                const response = await fetch(`${API_URL}/adjustments`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(adjustments),
+                const response = await fetch(`${API_BASE_URL}/constraints/${id}`, {
+                    method: 'DELETE'
                 });
-                if (!response.ok) {
-                    throw new Error('Erreur lors de l\'application des ajustements');
-                }
-                const result = await response.json();
-                showMessage('adjustments-message', 'success', result.message);
-                // Recharger les contraintes après application
-                loadConstraints();
+                if (!response.ok) throw new Error('Erreur lors de la suppression');
+                alert('Contrainte supprimée avec succès.');
+                loadAdjustments();
             } catch (error) {
-                showMessage('adjustments-message', 'error', `Erreur: ${error.message}`);
+                console.error('Erreur lors de la suppression:', error);
+                alert('Erreur lors de la suppression de la contrainte.');
             }
         }
 
-        // Afficher un message de succès ou d'erreur
-        function showMessage(elementId, type, message) {
-            const messageElement = document.getElementById(elementId);
-            messageElement.className = `message ${type}`;
-            messageElement.textContent = message;
-            messageElement.style.display = 'block';
-            setTimeout(() => {
-                messageElement.style.display = 'none';
-            }, 5000); // Masquer après 5 secondes
-        }
-
-        // Filtrer les logs
         function filterLogs() {
             const input = document.querySelector('#logs .search-bar input').value.toLowerCase();
             const rows = document.querySelectorAll('#log-table-body tr');
+
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(input) ? '' : 'none';
             });
         }
 
-        // Filtrer les ajustements
         function filterAdjustments() {
             const input = document.querySelector('#adjustments .search-bar input').value.toLowerCase();
-            const rows = document.querySelectorAll('#adjustments-table-body tr');
+            const rows = document.querySelectorAll('#adjustment-table-body tr');
+
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(input) ? '' : 'none';
             });
-        }
-
-        // Basculer la barre latérale
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('active');
-        }
-
-        // Changer d'onglet
-        function openTab(tabName) {
-            const tabs = document.querySelectorAll('.tab');
-            const contents = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            contents.forEach(content => content.classList.remove('active'));
-            document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(tabName).classList.add('active');
-            if (tabName === 'logs') {
-                loadLogs();
-            } else if (tabName === 'adjustments') {
-                loadConstraints();
-            }
         }
 
         // Charger les logs au démarrage
-        window.onload = loadLogs;
+        document.addEventListener('DOMContentLoaded', loadLogs);
     </script>
 </body>
 </html>
