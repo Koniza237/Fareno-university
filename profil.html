@@ -127,7 +127,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 0.75rem;
             border: none;
@@ -138,7 +138,7 @@
             outline: none;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             background-color: #4a4a4a;
         }
 
@@ -236,7 +236,7 @@
         <nav class="sidebar" id="sidebar">
             <img src="FARENOUNIVERSITY.jpg" alt="Fareno University Logo">
             <a href="dashboard.html">Tableau de Bord</a>
-            <a href="administration.html">Ajouter un Utilisateur</a>
+            <a href="gestion-utilisateurs.html">Gestion des Utilisateurs</a>
             <a href="gestion-ressources.html">Gestion des Ressources</a>
             <a href="saisie-contraintes.html">Saisie des Contraintes</a>
             <a href="visualisation.html">Visualisation</a>
@@ -254,6 +254,9 @@
                     <p><strong>Nom :</strong> <span id="profile-name">Chargement...</span></p>
                     <p><strong>E-mail :</strong> <span id="profile-email">Chargement...</span></p>
                     <p><strong>Rôle :</strong> <span id="profile-role">Chargement...</span></p>
+                    <p id="profile-subjects" style="display: none;"><strong>Matières :</strong> <span id="profile-subjects-value">N/A</span></p>
+                    <p id="profile-availability" style="display: none;"><strong>Disponibilité :</strong> <span id="profile-availability-value">N/A</span></p>
+                    <p id="profile-group" style="display: none;"><strong>Groupe :</strong> <span id="profile-group-value">N/A</span></p>
                 </div>
                 <form id="profile-form" class="profile-form">
                     <div class="form-group">
@@ -268,6 +271,20 @@
                         <label for="password">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
                         <input type="password" id="password" name="password" placeholder="Entrez un nouveau mot de passe">
                     </div>
+                    <div class="form-group" id="subjects-group" style="display: none;">
+                        <label for="subjects">Matières</label>
+                        <input type="text" id="subjects" name="subjects" placeholder="Ex: Mathématiques, Physique">
+                    </div>
+                    <div class="form-group" id="availability-group" style="display: none;">
+                        <label for="availability">Disponibilité</label>
+                        <input type="text" id="availability" name="availability" placeholder="Ex: Lundi-Mardi">
+                    </div>
+                    <div class="form-group" id="group-group" style="display: none;">
+                        <label for="group_id">Groupe</label>
+                        <select id="group_id" name="group_id">
+                            <option value="">Sélectionner un groupe</option>
+                        </select>
+                    </div>
                     <button type="submit" class="save-btn">Enregistrer</button>
                     <div class="error-message" id="error-message">Erreur lors de la mise à jour. Veuillez réessayer.</div>
                     <div class="success-message" id="success-message">Profil mis à jour avec succès !</div>
@@ -277,22 +294,72 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'http://localhost:10000/api';
+
         // Vérifier si l'utilisateur est connecté
         const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || user.role !== 'admin') {
+        if (!user || !['admin', 'teacher', 'student'].includes(user.role)) {
             window.location.href = 'index.html';
             return;
         }
 
+        // Charger les groupes pour les étudiants
+        async function loadGroups() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/groups`);
+                const groups = await response.json();
+                const groupSelect = document.getElementById('group_id');
+                groupSelect.innerHTML = '<option value="">Sélectionner un groupe</option>';
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.name;
+                    groupSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erreur lors du chargement des groupes:', error);
+            }
+        }
+
         // Afficher les informations de l'utilisateur
-        const displayUserInfo = () => {
-            document.getElementById('profile-name').textContent = user.username || 'N/A';
-            document.getElementById('profile-email').textContent = user.email || 'N/A';
-            document.getElementById('profile-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1) || 'N/A';
-            document.getElementById('name').value = user.username || '';
-            document.getElementById('email').value = user.email || '';
-        };
-        displayUserInfo();
+        async function displayUserInfo() {
+            let userData = user;
+            try {
+                if (user.role === 'teacher') {
+                    const response = await fetch(`${API_BASE_URL}/teachers`);
+                    const teachers = await response.json();
+                    userData = teachers.find(t => t.id === user.id) || user;
+                    document.getElementById('profile-subjects').style.display = 'block';
+                    document.getElementById('profile-subjects-value').textContent = userData.subjects || 'N/A';
+                    document.getElementById('subjects-group').style.display = 'block';
+                    document.getElementById('subjects').value = userData.subjects || '';
+                    document.getElementById('profile-availability').style.display = 'block';
+                    document.getElementById('profile-availability-value').textContent = userData.availability || 'N/A';
+                    document.getElementById('availability-group').style.display = 'block';
+                    document.getElementById('availability').value = userData.availability || '';
+                } else if (user.role === 'student') {
+                    const response = await fetch(`${API_BASE_URL}/students`);
+                    const students = await response.json();
+                    userData = students.find(s => s.id === user.id) || user;
+                    const groupsResponse = await fetch(`${API_BASE_URL}/groups`);
+                    const groups = await groupsResponse.json();
+                    const group = groups.find(g => g.id === userData.group_id);
+                    document.getElementById('profile-group').style.display = 'block';
+                    document.getElementById('profile-group-value').textContent = group ? group.name : 'N/A';
+                    document.getElementById('group-group').style.display = 'block';
+                    await loadGroups();
+                    document.getElementById('group_id').value = userData.group_id || '';
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des données utilisateur:', error);
+            }
+
+            document.getElementById('profile-name').textContent = userData.name || userData.username || 'N/A';
+            document.getElementById('profile-email').textContent = userData.email || 'N/A';
+            document.getElementById('profile-role').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('name').value = userData.name || userData.username || '';
+            document.getElementById('email').value = userData.email || '';
+        }
 
         // Gérer la soumission du formulaire
         document.getElementById('profile-form').addEventListener('submit', async function(event) {
@@ -302,11 +369,14 @@
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
 
-            const username = document.getElementById('name').value.trim();
+            const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const subjects = document.getElementById('subjects').value.trim();
+            const availability = document.getElementById('availability').value.trim();
+            const group_id = document.getElementById('group_id').value;
 
-            if (!username || !email) {
+            if (!name || !email) {
                 errorMessage.textContent = 'Le nom et l\'email sont requis.';
                 errorMessage.style.display = 'block';
                 return;
@@ -318,32 +388,53 @@
                 return;
             }
 
-            const data = { username, email };
-            if (password) {
-                data.password = password;
+            let endpoint = '';
+            const data = { id: user.id, name, email };
+            if (password) data.password = password;
+
+            if (user.role === 'admin') {
+                endpoint = `${API_BASE_URL}/admins/${user.id}`;
+                data.username = name;
+            } else if (user.role === 'teacher') {
+                endpoint = `${API_BASE_URL}/teachers`;
+                data.subjects = subjects || 'Non spécifié';
+                data.availability = availability || 'Non spécifié';
+            } else if (user.role === 'student') {
+                endpoint = `${API_BASE_URL}/students`;
+                data.group_id = parseInt(group_id) || 1; // Valeur par défaut si non spécifié
             }
 
             try {
-                const response = await fetch(`/api/admins/${user.id}`, {
+                const response = await fetch(endpoint, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-
                 const result = await response.json();
 
                 if (response.ok) {
-                    successMessage.textContent = result.message;
+                    successMessage.textContent = result.message || 'Profil mis à jour avec succès !';
                     successMessage.style.display = 'block';
                     // Mettre à jour localStorage
-                    localStorage.setItem('user', JSON.stringify({ ...user, username, email }));
+                    const updatedUser = { ...user, name, email };
+                    if (user.role === 'teacher') {
+                        updatedUser.subjects = data.subjects;
+                        updatedUser.availability = data.availability;
+                    } else if (user.role === 'student') {
+                        updatedUser.group_id = data.group_id;
+                    }
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
                     // Mettre à jour l'affichage
-                    user.username = username;
+                    user.name = name;
                     user.email = email;
+                    if (user.role === 'teacher') {
+                        user.subjects = subjects;
+                        user.availability = availability;
+                    } else if (user.role === 'student') {
+                        user.group_id = parseInt(group_id);
+                    }
                     displayUserInfo();
-                    document.getElementById('password').value = ''; // Réinitialiser le champ mot de passe
+                    document.getElementById('password').value = '';
                 } else {
                     errorMessage.textContent = result.error || 'Erreur lors de la mise à jour.';
                     errorMessage.style.display = 'block';
@@ -366,6 +457,9 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('active');
         }
+
+        // Charger les données au démarrage
+        document.addEventListener('DOMContentLoaded', displayUserInfo);
     </script>
 </body>
 </html>
