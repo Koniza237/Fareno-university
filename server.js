@@ -1,7 +1,7 @@
-
 const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
+const bcrypt = require('bcrypt');
 const app = express();
 const port = process.env.PORT || 10000;
 
@@ -13,16 +13,20 @@ const GROUPS_FILE = path.join(__dirname, 'groups.json');
 const ROOMS_FILE = path.join(__dirname, 'rooms.json');
 const CONSTRAINTS_FILE = path.join(__dirname, 'constraints.json');
 const TIMETABLE_FILE = path.join(__dirname, 'timetable.json');
+const ADMIN_FILE = path.join(__dirname, 'admin.json');
 
 // Créer les fichiers JSON s'ils n'existent pas
 async function initializeFiles() {
     try {
+        const saltRounds = 10;
+        const defaultAdminPassword = await bcrypt.hash('fareno12', saltRounds);
         const files = [
             { path: TEACHERS_FILE, initialContent: [{ id: 1, name: 'Dr. Dupont', email: 'dupont@example.com', subjects: 'Mathematiques', availability: 'Lundi-Mardi' }] },
             { path: GROUPS_FILE, initialContent: [{ id: 1, name: 'Groupe A', student_count: 30, subjects: 'Mathematiques, Physique' }] },
             { path: ROOMS_FILE, initialContent: [{ id: 1, name: 'Salle 101', capacity: 40, equipment: 'Projecteur' }] },
             { path: CONSTRAINTS_FILE, initialContent: [] },
-            { path: TIMETABLE_FILE, initialContent: [] }
+            { path: TIMETABLE_FILE, initialContent: [] },
+            { path: ADMIN_FILE, initialContent: [{ id: 1, username: 'admin', email: 'admin@gmail.com', password: defaultAdminPassword }] }
         ];
         for (const file of files) {
             try {
@@ -58,9 +62,37 @@ async function writeJsonFile(filePath, data) {
 
 // Initialiser les fichiers au démarrage
 initializeFiles().then(() => {
-    console.log('Fichiers JSON initialises');
+    console.log('Fichiers JSON initialisés');
 });
 
+// Route de connexion
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Nom d\'utilisateur et mot de passe sont requis.' });
+        }
+
+        const admins = await readJsonFile(ADMIN_FILE);
+        const admin = admins.find(a => a.username.toLowerCase() === username.toLowerCase() || a.email.toLowerCase() === username.toLowerCase());
+
+        if (!admin) {
+            return res.status(401).json({ error: 'Identifiants incorrects.' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Identifiants incorrects.' });
+        }
+
+        res.json({ message: 'Connexion réussie', admin: { id: admin.id, username: admin.username, email: admin.email } });
+    } catch (error) {
+        console.error('Echec de la connexion:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Routes existantes (enseignants, groupes, salles, contraintes, emploi du temps)
 app.get('/api/teachers', async (req, res) => {
     try {
         const teachers = await readJsonFile(TEACHERS_FILE);
