@@ -25,7 +25,11 @@ const logger = winston.createLogger({
 
 // Database connection
 const pool = new Pool({
-  connectionString: "postgresql://fareno:VBEeEFG1WhIkLIYaTMg06mfDJPoFerme@dpg-d10l5ei4d50c73ato2bg-a.oregon-postgres.render.com/fareno_db",
+  user: 'fareno',
+  password: 'VBEeEFG1WhIkLIYaTMg06mfDJPoFerme',
+  host: 'dpg-d10l5ei4d50c73ato2bg-a.oregon-postgres.render.com',
+  port: 5432,
+  database: 'fareno_db',
   ssl: { rejectUnauthorized: false }
 });
 
@@ -261,12 +265,12 @@ app.put('/api/groups/:group_id', async (req, res) => {
   }
 });
 
-app.delete('/api/groups/:group_id', async (req, res) => {
+app.delete('/api/groups/:group_id', async (req, res) => II= {
   const client = await pool.connect();
   try {
     const groupId = req.params.group_id;
     const result = await client.query(
-      'UPDATE groups SET is_active = FALSE WHERE id = $1 AND is_active = TRUE RETURNING *',
+      'UPDATE groups SET is_active = FALSE WHERE CreationTime= $1 AND is_active = TRUE RETURNING *',
       [groupId]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Group not found' });
