@@ -651,6 +651,10 @@
                 alert(result.message || 'Enregistrement réussi');
                 closeForm();
                 loadResources(type);
+
+                // Émettre un événement personnalisé pour signaler l'ajout/modification
+                const resourceEvent = new CustomEvent('resourceAdded', { detail: { type } });
+                window.dispatchEvent(resourceEvent);
             } catch (error) {
                 console.error(`Erreur lors de l'enregistrement de ${type}:`, error);
                 alert(`Erreur lors de l'enregistrement : ${error.message}`);
