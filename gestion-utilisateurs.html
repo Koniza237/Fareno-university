@@ -331,9 +331,17 @@
                         <input type="hidden" id="user-id" name="id">
                         <input type="text" id="name" name="name" placeholder="Nom" required>
                         <input type="email" id="email" name="email" placeholder="E-mail" required>
-                        <select id="role" name="role" required>
-                            <option value="Administrateur">Administrateur</option>
-                            <option value="Enseignant">Enseignant</option>
+                        <input type="password" id="password" name="password" placeholder="Mot de passe" required>
+                        <select id="role" name="role" onchange="toggleRoleFields()" required>
+                            <option value="admin">Administrateur</option>
+                            <option value="teacher">Enseignant</option>
+                            <option value="student">Étudiant</option>
+                        </select>
+                        <input type="text" id="subjects" name="subjects" placeholder="Matières (ex: Mathématiques, Physique)" style="display: none;">
+                        <input type="text" id="availability" name="availability" placeholder="Disponibilité (ex: Lundi-Mardi)" style="display: none;">
+                        <select id="group_id" name="group_id" style="display: none;">
+                            <option value="">Sélectionner un groupe</option>
+                            <!-- Options chargées dynamiquement -->
                         </select>
                         <button type="submit">Enregistrer</button>
                         <button type="button" class="cancel" onclick="closeForm()">Annuler</button>
@@ -344,6 +352,8 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'http://localhost:10000/api';
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('active');
@@ -360,34 +370,72 @@
             });
         }
 
-        function loadUsers() {
-            fetch('/api/users')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.getElementById('user-table-body');
-                    tableBody.innerHTML = '';
-                    data.forEach(user => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                            <td>${user.role}</td>
-                            <td>
-                                <button class="edit-btn" onclick="openEditForm(${user.id}, '${user.name}', '${user.email}', '${user.role}')">Modifier</button>
-                                <button class="delete-btn" onclick="deleteUser(${user.id})">Supprimer</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                    filterUsers(); // Appliquer le filtre initial
-                })
-                .catch(error => {
-                    console.error('Erreur lors du chargement des utilisateurs:', error);
-                    alert('Erreur lors du chargement des utilisateurs');
+        async function loadGroups() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/groups`);
+                const groups = await response.json();
+                const groupSelect = document.getElementById('group_id');
+                groupSelect.innerHTML = '<option value="">Sélectionner un groupe</option>';
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.name;
+                    groupSelect.appendChild(option);
                 });
+            } catch (error) {
+                console.error('Erreur lors du chargement des groupes:', error);
+                alert('Erreur lors du chargement des groupes');
+            }
         }
 
-        function openAddForm() {
+        async function loadUsers() {
+            try {
+                const [teachersResponse, studentsResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/teachers`),
+                    fetch(`${API_BASE_URL}/students`)
+                ]);
+                const teachers = await teachersResponse.json();
+                const students = await studentsResponse.json();
+
+                // Simuler un administrateur (car GET /api/admins n'existe pas)
+                const admins = [{ id: 1, username: 'admin', email: 'admin@gmail.com', role: 'admin' }];
+
+                const users = [
+                    ...admins.map(a => ({ id: a.id, name: a.username, email: a.email, role: 'Administrateur' })),
+                    ...teachers.map(t => ({ id: t.id, name: t.name, email: t.email, role: 'Enseignant' })),
+                    ...students.map(s => ({ id: s.id, name: s.name, email: s.email, role: 'Étudiant' }))
+                ];
+
+                const tableBody = document.getElementById('user-table-body');
+                tableBody.innerHTML = '';
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.role}</td>
+                        <td>
+                            <button class="edit-btn" onclick="openEditForm(${user.id}, '${user.name}', '${user.email}', '${user.role}')">Modifier</button>
+                            <button class="delete-btn" onclick="deleteUser(${user.id}, '${user.role}')">Supprimer</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                filterUsers();
+            } catch (error) {
+                console.error('Erreur lors du chargement des utilisateurs:', error);
+                alert('Erreur lors du chargement des utilisateurs');
+            }
+        }
+
+        function toggleRoleFields() {
+            const role = document.getElementById('role').value;
+            document.getElementById('subjects').style.display = role === 'teacher' ? 'block' : 'none';
+            document.getElementById('availability').style.display = role === 'teacher' ? 'block' : 'none';
+            document.getElementById('group_id').style.display = role === 'student' ? 'block' : 'none';
+        }
+
+        async function openAddForm() {
             const formOverlay = document.getElementById('form-overlay');
             const formTitle = document.getElementById('form-title');
             const form = document.getElementById('user-form');
@@ -397,7 +445,14 @@
             document.getElementById('user-id').value = '';
             document.getElementById('name').value = '';
             document.getElementById('email').value = '';
-            document.getElementById('role').value = 'Administrateur';
+            document.getElementById('password').value = '';
+            document.getElementById('role').value = 'admin';
+            document.getElementById('subjects').value = '';
+            document.getElementById('availability').value = '';
+            document.getElementById('group_id').value = '';
+            toggleRoleFields();
+
+            await loadGroups();
 
             form.onsubmit = (e) => {
                 e.preventDefault();
@@ -405,7 +460,7 @@
             };
         }
 
-        function openEditForm(id, name, email, role) {
+        async function openEditForm(id, name, email, role) {
             const formOverlay = document.getElementById('form-overlay');
             const formTitle = document.getElementById('form-title');
             const form = document.getElementById('user-form');
@@ -415,7 +470,25 @@
             document.getElementById('user-id').value = id;
             document.getElementById('name').value = name;
             document.getElementById('email').value = email;
-            document.getElementById('role').value = role;
+            document.getElementById('password').value = ''; // Ne pas pré-remplir le mot de passe
+            document.getElementById('role').value = role.toLowerCase();
+
+            // Charger les données spécifiques au rôle
+            if (role === 'Enseignant') {
+                const response = await fetch(`${API_BASE_URL}/teachers`);
+                const teachers = await response.json();
+                const teacher = teachers.find(t => t.id === id);
+                document.getElementById('subjects').value = teacher?.subjects || '';
+                document.getElementById('availability').value = teacher?.availability || '';
+            } else if (role === 'Étudiant') {
+                const response = await fetch(`${API_BASE_URL}/students`);
+                const students = await response.json();
+                const student = students.find(s => s.id === id);
+                document.getElementById('group_id').value = student?.group_id || '';
+            }
+
+            await loadGroups();
+            toggleRoleFields();
 
             form.onsubmit = (e) => {
                 e.preventDefault();
@@ -423,48 +496,74 @@
             };
         }
 
-        function saveUser() {
+        async function saveUser() {
             const id = document.getElementById('user-id').value;
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
+            const subjects = document.getElementById('subjects').value;
+            const availability = document.getElementById('availability').value;
+            const group_id = document.getElementById('group_id').value;
 
-            const data = { id, name, email, role };
-            const method = id ? 'PUT' : 'POST';
+            let endpoint = '';
+            const data = { name, email };
+            if (password) data.password = password;
 
-            fetch('/api/users', {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || data.error);
-                    closeForm();
-                    loadUsers();
-                })
-                .catch(error => {
-                    console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
-                    alert('Erreur lors de l\'enregistrement');
+            if (role === 'admin') {
+                endpoint = `${API_BASE_URL}/admins`;
+                data.username = name;
+            } else if (role === 'teacher') {
+                endpoint = `${API_BASE_URL}/teachers`;
+                data.subjects = subjects || 'Non spécifié';
+                data.availability = availability || 'Non spécifié';
+            } else if (role === 'student') {
+                endpoint = `${API_BASE_URL}/students`;
+                data.group_id = parseInt(group_id) || 1; // Valeur par défaut si non spécifié
+            }
+
+            if (id) data.id = parseInt(id);
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Erreur lors de l\'enregistrement');
+                alert(result.message);
+                closeForm();
+                loadUsers();
+            } catch (error) {
+                console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
+                alert('Erreur lors de l\'enregistrement: ' + error.message);
+            }
         }
 
-        function deleteUser(id) {
-            if (confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
-                fetch(`/api/users/${id}`, {
+        async function deleteUser(id, role) {
+            if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return;
+
+            let endpoint = '';
+            if (role === 'Administrateur') {
+                endpoint = `${API_BASE_URL}/admins/${id}`;
+            } else if (role === 'Enseignant') {
+                endpoint = `${API_BASE_URL}/teachers/${id}`;
+            } else if (role === 'Étudiant') {
+                endpoint = `${API_BASE_URL}/students/${id}`;
+            }
+
+            try {
+                const response = await fetch(endpoint, {
                     method: 'DELETE'
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || data.error);
-                        loadUsers();
-                    })
-                    .catch(error => {
-                        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-                        alert('Erreur lors de la suppression');
-                    });
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Erreur lors de la suppression');
+                alert(result.message);
+                loadUsers();
+            } catch (error) {
+                console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+                alert('Erreur lors de la suppression: ' + error.message);
             }
         }
 
