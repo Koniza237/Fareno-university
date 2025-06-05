@@ -146,40 +146,51 @@
             <div class="error-message" id="error-message">Identifiants incorrects. Veuillez réessayer.</div>
         </form>
     </div>
+ <script>
+document.getElementById('login-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const errorMessage = document.getElementById('error-message');
 
-    <script>
-        document.getElementById('login-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
+    // Vérification des identifiants par défaut
+    if (username === 'fareno' && password === 'fareno12') {
+        // Stocker les informations de l'admin dans localStorage
+        localStorage.setItem('admin', JSON.stringify({ username: 'fareno', role: 'admin' }));
+        // Rediriger vers le tableau de bord
+        window.location.href = 'dashboard.html';
+        return;
+    }
 
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+    try {
+        // Vérification via le fichier admin.json
+        const response = await fetch('/api/admin.json');
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération du fichier admin.json');
+        }
+        const admins = await response.json();
 
-                const data = await response.json();
+        // Vérification si l'utilisateur existe dans admin.json
+        const admin = admins.find(
+            admin => admin.username === username && admin.password === password
+        );
 
-                if (response.ok) {
-                    // Stocker les informations de l'admin dans localStorage (optionnel)
-                    localStorage.setItem('admin', JSON.stringify(data.admin));
-                    // Rediriger vers le tableau de bord
-                    window.location.href = 'dashboard.html';
-                } else {
-                    errorMessage.textContent = data.error || 'Erreur lors de la connexion.';
-                    errorMessage.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Erreur de connexion:', error);
-                errorMessage.textContent = 'Erreur serveur. Veuillez réessayer.';
-                errorMessage.style.display = 'block';
-            }
-        });
-    </script>
+        if (admin) {
+            // Stocker les informations de l'admin dans localStorage
+            localStorage.setItem('admin', JSON.stringify(admin));
+            // Rediriger vers le tableau de bord
+            window.location.href = 'dashboard.html';
+        } else {
+            // Si les identifiants ne correspondent ni au défaut ni au fichier
+            errorMessage.textContent = 'Identifiants incorrects. Veuillez réessayer.';
+            errorMessage.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Erreur de connexion:', error);
+        errorMessage.textContent = 'Erreur serveur ou fichier admin.json introuvable. Veuillez réessayer.';
+        errorMessage.style.display = 'block';
+    }
+});
+</script>
 </body>
 </html>
