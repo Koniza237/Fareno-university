@@ -1,57 +1,202 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="FARENOUNIVERSITY.jpg" type="image/x-icon">
-    <title>Ajouter un utilisateur - Fareno University</title>
+    <title>Administration - Fareno University</title>
     <style>
         body {
             margin: 0;
             height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            background-image: url('farenou.jpg');
+            background-image: url('75ca7cbd-47b3-44e2-bc28-0a529f4c5af6.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            font-family: Arial, sans-serif;
             color: #ffffff;
+            overflow-x: hidden;
         }
 
-        .form-container {
-            background-color: rgba(42, 42, 42, 0.8);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        .container {
+            display: flex;
+            height: 100%;
             width: 100%;
-            max-width: 400px;
-            text-align: center;
-            opacity: 0;
-            transform: scale(0.8);
-            animation: zoomIn 0.5s ease-out forwards;
         }
 
-        h2 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            color: #4CAF50;
+        .sidebar {
+            width: 250px;
+            background-color: rgba(30, 30, 30, 0.95);
+            padding: 2rem 1rem;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
         }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
+        .sidebar.hidden {
+            transform: translateX(-250px);
         }
 
-        label {
+        .sidebar img {
+            width: 150px;
             display: block;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
+            margin: 0 auto 2rem auto;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #4CAF50;
             color: #ffffff;
         }
 
-        input, select {
+        .sidebar a.logout {
+            color: #ff4d4d;
+        }
+
+        .sidebar a.logout:hover {
+            background-color: #ff4d4d;
+            color: #ffffff;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            width: calc(100% - 250px);
+            background-color: rgba(30, 30, 30, 0.85);
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .message {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #4CAF50;
+            color: #ffffff;
+        }
+
+        .message.error {
+            background-color: #ff4d4d;
+            color: #ffffff;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #4CAF50;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: #4CAF50;
+            color: #ffffff;
+        }
+
+        .tab:hover {
+            background-color: #45a049;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #3a3a3a;
+            color: #ffffff;
+            font-size: 1rem;
+            width: 250px;
+            outline: none;
+        }
+
+        .apply-btn {
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .apply-btn:hover {
+            background-color: #45a049;
+        }
+
+        .log-table, .adjustment-form {
+            background-color: #2a2a2a;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .log-table table, .adjustment-form table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .log-table th, .log-table td, .adjustment-form th, .adjustment-form td {
+            padding: 1rem;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .log-table th, .adjustment-form th {
+            background-color: #4CAF50;
+            color: #ffffff;
+        }
+
+        .log-table td, .adjustment-form td {
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .adjustment-form input, .adjustment-form select {
             width: 100%;
             padding: 0.75rem;
             border: none;
@@ -60,51 +205,26 @@
             color: #ffffff;
             font-size: 1rem;
             outline: none;
-            transition: background-color 0.3s;
         }
 
-        input:focus, select:focus {
-            background-color: #4a4a4a;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 0.75rem;
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
             background-color: #4CAF50;
             border: none;
-            border-radius: 5px;
             color: #ffffff;
-            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            z-index: 1000;
         }
 
-        .submit-btn:hover {
-            background-color: #45a049;
-        }
-
-        .error-message, .success-message {
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            display: none;
-        }
-
-        .error-message {
-            color: #ff4d4d;
-        }
-
-        .success-message {
-            color: #4CAF50;
-        }
-
-        .teacher-fields, .student-fields {
-            display: none;
-        }
-
-        @keyframes zoomIn {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: scale(0.8);
+                transform: scale(0.95);
             }
             to {
                 opacity: 1;
@@ -113,126 +233,280 @@
         }
 
         @media (max-width: 768px) {
-            .form-container {
+            .sidebar {
+                transform: translateX(-250px);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
                 padding: 1.5rem;
-                max-width: 90%;
             }
 
-            h2 {
-                font-size: 1.5rem;
+            .menu-toggle {
+                display: block;
             }
 
-            input, select, .submit-btn {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 1rem;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .search-bar input {
+                width: 100%;
+            }
+
+            .log-table th, .log-table td, .adjustment-form th, .adjustment-form td {
                 font-size: 0.9rem;
-                padding: 0.6rem;
+                padding: 0.75rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>Ajouter un utilisateur</h2>
-        <form id="add-user-form">
-            <div class="form-group">
-                <label for="user-type">Type d'utilisateur</label>
-                <select id="user-type" name="user-type" required>
-                    <option value="admin">Administrateur</option>
-                    <option value="teacher">Enseignant</option>
-                    <option value="student">Étudiant</option>
-                </select>
+    <div class="container">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+        <nav class="sidebar" id="sidebar">
+            <img src="FARENOUNIVERSITY.jpg" alt="Fareno University Logo">
+            <a href="dashboard.html">Tableau de Bord</a>
+            <a href="gestion-utilisateurs.html">Gestion des Utilisateurs</a>
+            <a href="gestion-ressources.html">Gestion des Ressources</a>
+            <a href="saisie-contraintes.html">Saisie des Contraintes</a>
+            <a href="visualisation.html">Visualisation</a>
+            <a href="exportation.html">Exportation</a>
+            <a href="administration.html">Administration</a>
+            <a href="profil.html">Profil</a>
+            <a href="aide.html">Aide</a>
+            <a href="index.html" class="logout">Déconnexion</a>
+        </nav>
+        <main class="main-content">
+            <h1>Administration</h1>
+            <div class="tabs">
+                <div class="tab active" onclick="openTab('logs')">Logs</div>
+                <div class="tab" onclick="openTab('adjustments')">Ajustements Manuels</div>
             </div>
-            <div class="form-group">
-                <label for="name">Nom</label>
-                <input type="text" id="name" name="name" placeholder="Entrez le nom" required>
+            <div id="logs" class="tab-content active">
+                <div class="message" id="logs-message"></div>
+                <div class="actions">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Rechercher dans les logs..." onkeyup="filterLogs()">
+                    </div>
+                </div>
+                <div class="log-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Utilisateur</th>
+                                <th>Action</th>
+                                <th>Détails</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-table-body">
+                            <!-- Les logs seront chargés dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" placeholder="Entrez l'e-mail" required>
+            <div id="adjustments" class="tab-content">
+                <div class="message" id="adjustments-message"></div>
+                <div class="actions">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Rechercher un ajustement..." onkeyup="filterAdjustments()">
+                    </div>
+                    <button class="apply-btn" onclick="applyAdjustments()">Appliquer Ajustements</button>
+                </div>
+                <div class="adjustment-form">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ressource</th>
+                                <th>Jour</th>
+                                <th>Heure</th>
+                                <th>Nouvelle Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adjustments-table-body">
+                            <!-- Les contraintes seront chargées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" placeholder="Entrez le mot de passe" required>
-            </div>
-            <div class="form-group teacher-fields">
-                <label for="subjects">Matières</label>
-                <input type="text" id="subjects" name="subjects" placeholder="Ex: Mathématiques, Physique">
-            </div>
-            <div class="form-group teacher-fields">
-                <label for="availability">Disponibilité</label>
-                <input type="text" id="availability" name="availability" placeholder="Ex: Lundi-Mardi">
-            </div>
-            <div class="form-group student-fields">
-                <label for="group_id">ID du groupe</label>
-                <input type="number" id="group_id" name="group_id" placeholder="Entrez l'ID du groupe">
-            </div>
-            <button type="submit" class="submit-btn">Ajouter</button>
-            <div class="error-message" id="error-message">Erreur lors de l'ajout. Veuillez réessayer.</div>
-            <div class="success-message" id="success-message">Utilisateur ajouté avec succès !</div>
-        </form>
+        </main>
     </div>
 
     <script>
-        const userTypeSelect = document.getElementById('user-type');
-        const teacherFields = document.querySelectorAll('.teacher-fields');
-        const studentFields = document.querySelectorAll('.student-fields');
-        const form = document.getElementById('add-user-form');
-        const errorMessage = document.getElementById('error-message');
-        const successMessage = document.getElementById('success-message');
+        // URL de l'API (ajustée pour votre environnement, à confirmer)
+        const API_URL = 'https://ep-steep-hat-a8yxx3sa-pooler.eastus2.azure.neon.tech/api';
 
-        userTypeSelect.addEventListener('change', function() {
-            teacherFields.forEach(field => field.style.display = this.value === 'teacher' ? 'block' : 'none');
-            studentFields.forEach(field => field.style.display = this.value === 'student' ? 'block' : 'none');
-        });
+        // Charger les logs dynamiquement
+        async function loadLogs() {
+            try {
+                const response = await fetch(`${API_URL}/logs`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des logs');
+                }
+                const logs = await response.json();
+                const logTableBody = document.getElementById('log-table-body');
+                logTableBody.innerHTML = ''; // Vider le tableau
+                logs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${log.date}</td>
+                        <td>${log.user}</td>
+                        <td>${log.action}</td>
+                        <td>${log.details}</td>
+                    `;
+                    logTableBody.appendChild(row);
+                });
+                showMessage('logs-message', 'success', 'Logs chargés avec succès');
+            } catch (error) {
+                showMessage('logs-message', 'error', `Erreur: ${error.message}`);
+            }
+        }
 
-        form.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
+        // Charger les contraintes dynamiquement pour l'onglet Ajustements
+        async function loadConstraints() {
+            try {
+                const response = await fetch(`${API_URL}/constraints`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des contraintes');
+                }
+                const constraints = await response.json();
+                const adjustmentsTableBody = document.getElementById('adjustments-table-body');
+                adjustmentsTableBody.innerHTML = ''; // Vider le tableau
+                constraints.forEach(constraint => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="text" name="resource" value="${constraint.resource_name}"></td>
+                        <td><select name="day">
+                            <option value="lundi" ${constraint.day === 'lundi' ? 'selected' : ''}>Lundi</option>
+                            <option value="mardi" ${constraint.day === 'mardi' ? 'selected' : ''}>Mardi</option>
+                            <option value="mercredi" ${constraint.day === 'mercredi' ? 'selected' : ''}>Mercredi</option>
+                            <option value="jeudi" ${constraint.day === 'jeudi' ? 'selected' : ''}>Jeudi</option>
+                            <option value="vendredi" ${constraint.day === 'vendredi' ? 'selected' : ''}>Vendredi</option>
+                        </select></td>
+                        <td><input type="time" name="time" value="${constraint.time}"></td>
+                        <td><input type="text" name="new_value" value="${constraint.constraint_type}"></td>
+                    `;
+                    adjustmentsTableBody.appendChild(row);
+                });
+                showMessage('adjustments-message', 'success', 'Contraintes chargées avec succès');
+            } catch (error) {
+                showMessage('adjustments-message', 'error', `Erreur: ${error.message}`);
+            }
+        }
 
-            const userType = document.getElementById('user-type').value;
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const subjects = document.getElementById('subjects').value.trim();
-            const availability = document.getElementById('availability').value.trim();
-            const group_id = document.getElementById('group_id').value;
+        // Appliquer les ajustements manuels
+        async function applyAdjustments() {
+            const rows = document.querySelectorAll('#adjustments-table-body tr');
+            const adjustments = [];
+            rows.forEach(row => {
+                const resource = row.querySelector('input[name="resource"]').value;
+                const day = row.querySelector('select[name="day"]').value;
+                const time = row.querySelector('input[name="time"]').value;
+                const new_value = row.querySelector('input[name="new_value"]').value;
+                if (resource && day && time && new_value) {
+                    adjustments.push({ resource, day, time, new_value });
+                }
+            });
 
-            const data = { name, email, password };
-            if (userType === 'admin') {
-                data.username = name;
-            } else if (userType === 'teacher') {
-                data.subjects = subjects || null;
-                data.availability = availability || null;
-            } else if (userType === 'student') {
-                data.group_id = parseInt(group_id);
+            if (adjustments.length === 0) {
+                showMessage('adjustments-message', 'error', 'Aucun ajustement valide à appliquer');
+                return;
             }
 
             try {
-                const response = await fetch(`/api/${userType}s`, {
+                const response = await fetch(`${API_URL}/adjustments`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(adjustments),
                 });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    successMessage.textContent = result.message;
-                    successMessage.style.display = 'block';
-                    form.reset();
-                    userTypeSelect.dispatchEvent(new Event('change'));
-                } else {
-                    errorMessage.textContent = result.error || 'Erreur lors de l\'ajout.';
-                    errorMessage.style.display = 'block';
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'application des ajustements');
                 }
+                const result = await response.json();
+                showMessage('adjustments-message', 'success', result.message);
+                // Recharger les contraintes après application
+                loadConstraints();
             } catch (error) {
-                console.error('Erreur:', error);
-                errorMessage.textContent = 'Erreur serveur. Veuillez réessayer.';
-                errorMessage.style.display = 'block';
+                showMessage('adjustments-message', 'error', `Erreur: ${error.message}`);
             }
-        });
+        }
+
+        // Afficher un message de succès ou d'erreur
+        function showMessage(elementId, type, message) {
+            const messageElement = document.getElementById(elementId);
+            messageElement.className = `message ${type}`;
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 5000); // Masquer après 5 secondes
+        }
+
+        // Filtrer les logs
+        function filterLogs() {
+            const input = document.querySelector('#logs .search-bar input').value.toLowerCase();
+            const rows = document.querySelectorAll('#log-table-body tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        // Filtrer les ajustements
+        function filterAdjustments() {
+            const input = document.querySelector('#adjustments .search-bar input').value.toLowerCase();
+            const rows = document.querySelectorAll('#adjustments-table-body tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        // Basculer la barre latérale
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Changer d'onglet
+        function openTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            if (tabName === 'logs') {
+                loadLogs();
+            } else if (tabName === 'adjustments') {
+                loadConstraints();
+            }
+        }
+
+        // Charger les logs au démarrage
+        window.onload = loadLogs;
     </script>
 </body>
 </html>
