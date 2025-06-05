@@ -148,16 +148,35 @@
     </div>
 
     <script>
-        document.getElementById('login-form').addEventListener('submit', function(event) {
+        document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();
-            const username = document.getElementById('username').value.trim().toLowerCase();
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
 
-            if ((username === 'admin' || username === 'admin@gmail.com') && password === 'fareno12') {
-                // Rediriger vers le tableau de bord (à créer)
-                window.location.href = 'dashboard.html';
-            } else {
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Stocker les informations de l'admin dans localStorage (optionnel)
+                    localStorage.setItem('admin', JSON.stringify(data.admin));
+                    // Rediriger vers le tableau de bord
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorMessage.textContent = data.error || 'Erreur lors de la connexion.';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+                errorMessage.textContent = 'Erreur serveur. Veuillez réessayer.';
                 errorMessage.style.display = 'block';
             }
         });
