@@ -28,7 +28,7 @@ async function readJsonFile(filePath) {
             // Si le fichier n'existe pas, retourner un tableau vide
             return [];
         }
-        throw error;
+        throw new Error(`Error reading ${filePath}: ${error.message}`);
     }
 }
 
@@ -37,7 +37,7 @@ async function writeJsonFile(filePath, data) {
     try {
         await fs.writeFile(filePath, JSON.stringify(data, null, 2));
     } catch (error) {
-        throw new Error(`Erreur lors de l'écriture dans ${filePath}: ${error.message}`);
+        throw new Error(`Error writing to ${filePath}: ${error.message}`);
     }
 }
 
@@ -47,8 +47,8 @@ app.get('/api/teachers', async (req, res) => {
         const teachers = await readJsonFile(TEACHERS_FILE);
         res.json(teachers);
     } catch (error) {
-        console.error('Erreur lors de la lecture des enseignants:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error reading teachers:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -56,17 +56,17 @@ app.post('/api/teachers', async (req, res) => {
     try {
         const { name, email, subjects, availability } = req.body;
         if (!name || !email || !subjects) {
-            return res.status(400).json({ error: 'Nom, email et matières sont requis.' });
+            return res.status(400).json({ error: 'Name, email, and subjects are required.' });
         }
         const teachers = await readJsonFile(TEACHERS_FILE);
         const id = teachers.length > 0 ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
         const newTeacher = { id, name, email, subjects, availability: availability || null };
         teachers.push(newTeacher);
         await writeJsonFile(TEACHERS_FILE, teachers);
-        res.status(201).json({ message: 'Enseignant ajouté avec succès', teacher: newTeacher });
+        res.status(201).json({ message: 'Teacher added successfully', teacher: newTeacher });
     } catch (error) {
-        console.error('Erreur lors de l\'ajout de l\'enseignant:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error adding teacher:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -76,17 +76,17 @@ app.put('/api/teachers', async (req, res) => {
         const teachers = await readJsonFile(TEACHERS_FILE);
         const teacherIndex = teachers.findIndex(t => t.id === parseInt(id));
         if (teacherIndex === -1) {
-            return res.status(404).json({ error: 'Enseignant non trouvé.' });
+            return res.status(404).json({ error: 'Teacher not found.' });
         }
         if (!name || !email || !subjects) {
-            return res.status(400).json({ error: 'Nom, email et matières sont requis.' });
+            return res.status(400).json({ error: 'Name, email, and subjects are required.' });
         }
         teachers[teacherIndex] = { id: parseInt(id), name, email, subjects, availability: availability || null };
         await writeJsonFile(TEACHERS_FILE, teachers);
-        res.json({ message: 'Enseignant mis à jour avec succès', teacher: teachers[teacherIndex] });
+        res.json({ message: 'Teacher updated successfully', teacher: teachers[teacherIndex] });
     } catch (error) {
-        console.error('Erreur lors de la mise à jour de l\'enseignant:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error updating teacher:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -96,14 +96,14 @@ app.delete('/api/teachers/:id', async (req, res) => {
         const teachers = await readJsonFile(TEACHERS_FILE);
         const teacherIndex = teachers.findIndex(t => t.id === id);
         if (teacherIndex === -1) {
-            return res.status(404).json({ error: 'Enseignant non trouvé.' });
+            return res.status(404).json({ error: 'Teacher not found.' });
         }
         teachers.splice(teacherIndex, 1);
         await writeJsonFile(TEACHERS_FILE, teachers);
-        res.json({ message: 'Enseignant supprimé avec succès' });
+        res.json({ message: 'Teacher deleted successfully' });
     } catch (error) {
-        console.error('Erreur lors de la suppression de l\'enseignant:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error deleting teacher:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -113,8 +113,8 @@ app.get('/api/groups', async (req, res) => {
         const groups = await readJsonFile(GROUPS_FILE);
         res.json(groups);
     } catch (error) {
-        console.error('Erreur lors de la lecture des groupes:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error reading groups:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -122,17 +122,17 @@ app.post('/api/groups', async (req, res) => {
     try {
         const { name, student_count, subjects } = req.body;
         if (!name || !student_count) {
-            return res.status(400).json({ error: 'Nom et nombre d\'étudiants sont requis.' });
+            return res.status(400).json({ error: 'Name and student count are required.' });
         }
         const groups = await readJsonFile(GROUPS_FILE);
         const id = groups.length > 0 ? Math.max(...groups.map(g => g.id)) + 1 : 1;
         const newGroup = { id, name, student_count: parseInt(student_count), subjects: subjects || null };
         groups.push(newGroup);
         await writeJsonFile(GROUPS_FILE, groups);
-        res.status(201).json({ message: 'Groupe ajouté avec succès', group: newGroup });
+        res.status(201).json({ message: 'Group added successfully', group: newGroup });
     } catch (error) {
-        console.error('Erreur lors de l\'ajout du groupe:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error adding group:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -142,17 +142,17 @@ app.put('/api/groups', async (req, res) => {
         const groups = await readJsonFile(GROUPS_FILE);
         const groupIndex = groups.findIndex(g => g.id === parseInt(id));
         if (groupIndex === -1) {
-            return res.status(404).json({ error: 'Groupe non trouvé.' });
+            return res.status(404).json({ error: 'Group not found.' });
         }
         if (!name || !student_count) {
-            return res.status(400).json({ error: 'Nom et nombre d\'étudiants sont requis.' });
+            return res.status(400).json({ error: 'Name and student count are required.' });
         }
         groups[groupIndex] = { id: parseInt(id), name, student_count: parseInt(student_count), subjects: subjects || null };
         await writeJsonFile(GROUPS_FILE, groups);
-        res.json({ message: 'Groupe mis à jour avec succès', group: groups[groupIndex] });
+        res.json({ message: 'Group updated successfully', group: groups[groupIndex] });
     } catch (error) {
-        console.error('Erreur lors de la mise à jour du groupe:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error updating group:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -162,14 +162,14 @@ app.delete('/api/groups/:id', async (req, res) => {
         const groups = await readJsonFile(GROUPS_FILE);
         const groupIndex = groups.findIndex(g => g.id === id);
         if (groupIndex === -1) {
-            return res.status(404).json({ error: 'Groupe non trouvé.' });
+            return res.status(404).json({ error: 'Group not found.' });
         }
         groups.splice(groupIndex, 1);
         await writeJsonFile(GROUPS_FILE, groups);
-        res.json({ message: 'Groupe supprimé avec succès' });
+        res.json({ message: 'Group deleted successfully' });
     } catch (error) {
-        console.error('Erreur lors de la suppression du groupe:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error deleting group:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -179,8 +179,8 @@ app.get('/api/rooms', async (req, res) => {
         const rooms = await readJsonFile(ROOMS_FILE);
         res.json(rooms);
     } catch (error) {
-        console.error('Erreur lors de la lecture des salles:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error reading rooms:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -188,17 +188,17 @@ app.post('/api/rooms', async (req, res) => {
     try {
         const { name, capacity, equipment } = req.body;
         if (!name || !capacity) {
-            return res.status(400).json({ error: 'Nom et capacité sont requis.' });
+            return res.status(400).json({ error: 'Name and capacity are required.' });
         }
         const rooms = await readJsonFile(ROOMS_FILE);
         const id = rooms.length > 0 ? Math.max(...rooms.map(r => r.id)) + 1 : 1;
         const newRoom = { id, name, capacity: parseInt(capacity), equipment: equipment || null };
         rooms.push(newRoom);
         await writeJsonFile(ROOMS_FILE, rooms);
-        res.status(201).json({ message: 'Salle ajoutée avec succès', room: newRoom });
+        res.status(201).json({ message: 'Room added successfully', room: newRoom });
     } catch (error) {
-        console.error('Erreur lors de l\'ajout de la salle:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error adding room:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -208,17 +208,17 @@ app.put('/api/rooms', async (req, res) => {
         const rooms = await readJsonFile(ROOMS_FILE);
         const roomIndex = rooms.findIndex(r => r.id === parseInt(id));
         if (roomIndex === -1) {
-            return res.status(404).json({ error: 'Salle non trouvée.' });
+            return res.status(404).json({ error: 'Room not found.' });
         }
         if (!name || !capacity) {
-            return res.status(400).json({ error: 'Nom et capacité sont requis.' });
+            return res.status(400).json({ error: 'Name and capacity are required.' });
         }
         rooms[roomIndex] = { id: parseInt(id), name, capacity: parseInt(capacity), equipment: equipment || null };
         await writeJsonFile(ROOMS_FILE, rooms);
-        res.json({ message: 'Salle mise à jour avec succès', room: rooms[roomIndex] });
+        res.json({ message: 'Room updated successfully', room: rooms[roomIndex] });
     } catch (error) {
-        console.error('Erreur lors de la mise à jour de la salle:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error updating room:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -228,14 +228,14 @@ app.delete('/api/rooms/:id', async (req, res) => {
         const rooms = await readJsonFile(ROOMS_FILE);
         const roomIndex = rooms.findIndex(r => r.id === id);
         if (roomIndex === -1) {
-            return res.status(404).json({ error: 'Salle non trouvée.' });
+            return res.status(404).json({ error: 'Room not found.' });
         }
         rooms.splice(roomIndex, 1);
         await writeJsonFile(ROOMS_FILE, rooms);
-        res.json({ message: 'Salle supprimée avec succès' });
+        res.json({ message: 'Room deleted successfully' });
     } catch (error) {
-        console.error('Erreur lors de la suppression de la salle:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error deleting room:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -245,8 +245,8 @@ app.get('/api/constraints', async (req, res) => {
         const constraints = await readJsonFile(CONSTRAINTS_FILE);
         res.json(constraints);
     } catch (error) {
-        console.error('Erreur lors de la lecture des contraintes:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error reading constraints:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -254,17 +254,17 @@ app.post('/api/constraints', async (req, res) => {
     try {
         const { resource_type, resource_id, resource_name, day, time, constraint_type } = req.body;
         if (!resource_type || !resource_id || !resource_name || !day || !time || !constraint_type) {
-            return res.status(400).json({ error: 'Tous les champs sont requis.' });
+            return res.status(400).json({ error: 'All fields are required.' });
         }
         const constraints = await readJsonFile(CONSTRAINTS_FILE);
         const id = constraints.length > 0 ? Math.max(...constraints.map(c => c.id)) + 1 : 1;
         const newConstraint = { id, resource_type, resource_id: parseInt(resource_id), resource_name, day, time, constraint_type };
         constraints.push(newConstraint);
         await writeJsonFile(CONSTRAINTS_FILE, constraints);
-        res.status(201).json({ message: 'Contrainte ajoutée avec succès', constraint: newConstraint });
+        res.status(201).json({ message: 'Constraint added successfully', constraint: newConstraint });
     } catch (error) {
-        console.error('Erreur lors de l\'ajout de la contrainte:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error adding constraint:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -274,17 +274,17 @@ app.put('/api/constraints', async (req, res) => {
         const constraints = await readJsonFile(CONSTRAINTS_FILE);
         const constraintIndex = constraints.findIndex(c => c.id === parseInt(id));
         if (constraintIndex === -1) {
-            return res.status(404).json({ error: 'Contrainte non trouvée.' });
+            return res.status(404).json({ error: 'Constraint not found.' });
         }
         if (!resource_type || !resource_id || !resource_name || !day || !time || !constraint_type) {
-            return res.status(400).json({ error: 'Tous les champs sont requis.' });
+            return res.status(400).json({ error: 'All fields are required.' });
         }
         constraints[constraintIndex] = { id: parseInt(id), resource_type, resource_id: parseInt(resource_id), resource_name, day, time, constraint_type };
         await writeJsonFile(CONSTRAINTS_FILE, constraints);
-        res.json({ message: 'Contrainte mise à jour avec succès', constraint: constraints[constraintIndex] });
+        res.json({ message: 'Constraint updated successfully', constraint: constraints[constraintIndex] });
     } catch (error) {
-        console.error('Erreur lors de la mise à jour de la contrainte:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error updating constraint:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -294,14 +294,14 @@ app.delete('/api/constraints/:id', async (req, res) => {
         const constraints = await readJsonFile(CONSTRAINTS_FILE);
         const constraintIndex = constraints.findIndex(c => c.id === id);
         if (constraintIndex === -1) {
-            return res.status(404).json({ error: 'Contrainte non trouvée.' });
+            return res.status(404).json({ error: 'Constraint not found.' });
         }
         constraints.splice(constraintIndex, 1);
         await writeJsonFile(CONSTRAINTS_FILE, constraints);
-        res.json({ message: 'Contrainte supprimée avec succès' });
+        res.json({ message: 'Constraint deleted successfully' });
     } catch (error) {
-        console.error('Erreur lors de la suppression de la contrainte:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error deleting constraint:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -332,8 +332,8 @@ app.get('/api/timetable', async (req, res) => {
 
         res.json(filteredTimetable);
     } catch (error) {
-        console.error('Erreur lors de la lecture de l\'emploi du temps:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error reading timetable:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -343,8 +343,8 @@ app.get('/api/timetable/dates', async (req, res) => {
         const dates = [...new Set(timetable.map(s => s.date))].sort();
         res.json(dates);
     } catch (error) {
-        console.error('Erreur lors de la lecture des dates:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error reading dates:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -352,7 +352,7 @@ app.post('/api/timetable/generate', async (req, res) => {
     try {
         const { group_id, date } = req.body;
         if (!group_id || !date) {
-            return res.status(400).json({ error: 'Groupe et date sont requis.' });
+            return res.status(400).json({ error: 'Group and date are required.' });
         }
         const timetable = await readJsonFile(TIMETABLE_FILE);
         const groups = await readJsonFile(GROUPS_FILE);
@@ -361,7 +361,7 @@ app.post('/api/timetable/generate', async (req, res) => {
 
         const group = groups.find(g => g.id === parseInt(group_id));
         if (!group) {
-            return res.status(404).json({ error: 'Groupe non trouvé.' });
+            return res.status(404).json({ error: 'Group not found.' });
         }
 
         // Exemple simplifié : générer un emploi du temps fictif
@@ -384,10 +384,10 @@ app.post('/api/timetable/generate', async (req, res) => {
 
         timetable.push(...newSessions);
         await writeJsonFile(TIMETABLE_FILE, timetable);
-        res.status(201).json({ message: 'Emploi du temps généré avec succès.' });
+        res.status(201).json({ message: 'Timetable generated successfully.' });
     } catch (error) {
-        console.error('Erreur lors de la génération de l\'emploi du temps:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error generating timetable:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -396,24 +396,24 @@ app.get('/api/timetable/export/:format', async (req, res) => {
         const { format } = req.params;
         const timetable = await readJsonFile(TIMETABLE_FILE);
         if (!['csv', 'pdf', 'ical'].includes(format)) {
-            return res.status(400).json({ error: 'Format non supporté.' });
+            return res.status(400).json({ error: 'Unsupported format.' });
         }
 
         // Simulation d'exportation (à implémenter selon les besoins)
-        res.json({ message: `Exportation en ${format} simulée.` });
+        res.json({ message: `Export to ${format} simulated.` });
     } catch (error) {
-        console.error('Erreur lors de l\'exportation:', error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        console.error('Error exporting timetable:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
 // Gestion des erreurs 404
 app.use((req, res) => {
-    res.status(404).json({ error: 'Route non trouvée' });
+    res.status(404).json({ error: 'Route not found' });
 });
 
 // Démarrer le serveur
 app.listen(port, () => {
-    console.log(`Serveur en écoute sur le port ${port}`);
+    console.log(`Server listening on port ${port}`);
 });
 ```
