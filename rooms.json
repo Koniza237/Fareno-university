@@ -1,0 +1,10 @@
+```json
+[
+    {
+        "id": 1,
+        "name": "Salle 101",
+        "capacity": 40,
+        "equipment": "Projecteur"
+    }
+]
+```
