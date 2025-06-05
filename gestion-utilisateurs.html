@@ -354,6 +354,13 @@
     <script>
         const API_BASE_URL = 'http://localhost:10000/api';
 
+        // Vérifier si l'utilisateur est connecté
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !['admin', 'teacher', 'student'].includes(user.role)) {
+            window.location.href = 'index.html';
+            return;
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('active');
@@ -373,6 +380,7 @@
         async function loadGroups() {
             try {
                 const response = await fetch(`${API_BASE_URL}/groups`);
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
                 const groups = await response.json();
                 const groupSelect = document.getElementById('group_id');
                 groupSelect.innerHTML = '<option value="">Sélectionner un groupe</option>';
@@ -394,11 +402,15 @@
                     fetch(`${API_BASE_URL}/teachers`),
                     fetch(`${API_BASE_URL}/students`)
                 ]);
+                if (!teachersResponse.ok) throw new Error(`Erreur HTTP : ${teachersResponse.status}`);
+                if (!studentsResponse.ok) throw new Error(`Erreur HTTP : ${studentsResponse.status}`);
                 const teachers = await teachersResponse.json();
                 const students = await studentsResponse.json();
 
-                // Simuler un administrateur (car GET /api/admins n'existe pas)
-                const admins = [{ id: 1, username: 'admin', email: 'admin@gmail.com', role: 'admin' }];
+                // Simuler les administrateurs (car GET /api/admins n'existe pas)
+                const admins = [
+                    { id: 1, username: 'Admin', email: 'admin@example.com', role: 'admin' }
+                ];
 
                 const users = [
                     ...admins.map(a => ({ id: a.id, name: a.username, email: a.email, role: 'Administrateur' })),
@@ -470,18 +482,19 @@
             document.getElementById('user-id').value = id;
             document.getElementById('name').value = name;
             document.getElementById('email').value = email;
-            document.getElementById('password').value = ''; // Ne pas pré-remplir le mot de passe
+            document.getElementById('password').value = '';
             document.getElementById('role').value = role.toLowerCase();
 
-            // Charger les données spécifiques au rôle
             if (role === 'Enseignant') {
                 const response = await fetch(`${API_BASE_URL}/teachers`);
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
                 const teachers = await response.json();
                 const teacher = teachers.find(t => t.id === id);
                 document.getElementById('subjects').value = teacher?.subjects || '';
                 document.getElementById('availability').value = teacher?.availability || '';
             } else if (role === 'Étudiant') {
                 const response = await fetch(`${API_BASE_URL}/students`);
+                if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
                 const students = await response.json();
                 const student = students.find(s => s.id === id);
                 document.getElementById('group_id').value = student?.group_id || '';
@@ -498,17 +511,27 @@
 
         async function saveUser() {
             const id = document.getElementById('user-id').value;
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
-            const subjects = document.getElementById('subjects').value;
-            const availability = document.getElementById('availability').value;
+            const subjects = document.getElementById('subjects').value.trim();
+            const availability = document.getElementById('availability').value.trim();
             const group_id = document.getElementById('group_id').value;
 
+            if (!name || !email || !password) {
+                alert('Veuillez remplir tous les champs obligatoires.');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Le mot de passe doit contenir au moins 6 caractères.');
+                return;
+            }
+
             let endpoint = '';
-            const data = { name, email };
-            if (password) data.password = password;
+            const data = { name, email, password };
+            if (id) data.id = parseInt(id);
 
             if (role === 'admin') {
                 endpoint = `${API_BASE_URL}/admins`;
@@ -519,10 +542,12 @@
                 data.availability = availability || 'Non spécifié';
             } else if (role === 'student') {
                 endpoint = `${API_BASE_URL}/students`;
-                data.group_id = parseInt(group_id) || 1; // Valeur par défaut si non spécifié
+                data.group_id = parseInt(group_id) || null;
+                if (!data.group_id) {
+                    alert('Veuillez sélectionner un groupe pour l\'étudiant.');
+                    return;
+                }
             }
-
-            if (id) data.id = parseInt(id);
 
             try {
                 const response = await fetch(endpoint, {
@@ -532,12 +557,12 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Erreur lors de l\'enregistrement');
-                alert(result.message);
+                alert(result.message || 'Utilisateur enregistré avec succès');
                 closeForm();
                 loadUsers();
             } catch (error) {
                 console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
-                alert('Erreur lors de l\'enregistrement: ' + error.message);
+                alert('Erreur lors de l\'enregistrement : ' + error.message);
             }
         }
 
@@ -559,11 +584,11 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Erreur lors de la suppression');
-                alert(result.message);
+                alert(result.message || 'Utilisateur supprimé avec succès');
                 loadUsers();
             } catch (error) {
                 console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-                alert('Erreur lors de la suppression: ' + error.message);
+                alert('Erreur lors de la suppression : ' + error.message);
             }
         }
 
