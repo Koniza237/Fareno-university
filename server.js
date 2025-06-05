@@ -5,49 +5,41 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware pour parser le JSON
 app.use(express.json());
-
-// Servir les fichiers statiques depuis la racine
 app.use(express.static(__dirname));
 
-// Chemins des fichiers JSON
 const TEACHERS_FILE = path.join(__dirname, 'teachers.json');
 const GROUPS_FILE = path.join(__dirname, 'groups.json');
 const ROOMS_FILE = path.join(__dirname, 'rooms.json');
 const CONSTRAINTS_FILE = path.join(__dirname, 'constraints.json');
 const TIMETABLE_FILE = path.join(__dirname, 'timetable.json');
 
-// Fonction pour lire un fichier JSON
 async function readJsonFile(filePath) {
     try {
         const data = await fs.readFile(filePath, 'utf8');
         return JSON.parse(data);
     } catch (error) {
         if (error.code === 'ENOENT') {
-            // Si le fichier n'existe pas, retourner un tableau vide
             return [];
         }
-        throw new Error(`Error reading ${filePath}: ${error.message}`);
+        throw new Error('Failed to read file: ' + error.message);
     }
 }
 
-// Fonction pour écrire dans un fichier JSON
 async function writeJsonFile(filePath, data) {
     try {
         await fs.writeFile(filePath, JSON.stringify(data, null, 2));
     } catch (error) {
-        throw new Error(`Error writing to ${filePath}: ${error.message}`);
+        throw new Error('Failed to write file: ' + error.message);
     }
 }
 
-// Routes pour les enseignants
 app.get('/api/teachers', async (req, res) => {
     try {
         const teachers = await readJsonFile(TEACHERS_FILE);
         res.json(teachers);
     } catch (error) {
-        console.error('Error reading teachers:', error);
+        console.error('Failed to read teachers:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -65,7 +57,7 @@ app.post('/api/teachers', async (req, res) => {
         await writeJsonFile(TEACHERS_FILE, teachers);
         res.status(201).json({ message: 'Teacher added successfully', teacher: newTeacher });
     } catch (error) {
-        console.error('Error adding teacher:', error);
+        console.error('Failed to add teacher:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -85,7 +77,7 @@ app.put('/api/teachers', async (req, res) => {
         await writeJsonFile(TEACHERS_FILE, teachers);
         res.json({ message: 'Teacher updated successfully', teacher: teachers[teacherIndex] });
     } catch (error) {
-        console.error('Error updating teacher:', error);
+        console.error('Failed to update teacher:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -102,18 +94,17 @@ app.delete('/api/teachers/:id', async (req, res) => {
         await writeJsonFile(TEACHERS_FILE, teachers);
         res.json({ message: 'Teacher deleted successfully' });
     } catch (error) {
-        console.error('Error deleting teacher:', error);
+        console.error('Failed to delete teacher:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Routes pour les groupes
 app.get('/api/groups', async (req, res) => {
     try {
         const groups = await readJsonFile(GROUPS_FILE);
         res.json(groups);
     } catch (error) {
-        console.error('Error reading groups:', error);
+        console.error('Failed to read groups:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -131,7 +122,7 @@ app.post('/api/groups', async (req, res) => {
         await writeJsonFile(GROUPS_FILE, groups);
         res.status(201).json({ message: 'Group added successfully', group: newGroup });
     } catch (error) {
-        console.error('Error adding group:', error);
+        console.error('Failed to add group:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -151,7 +142,7 @@ app.put('/api/groups', async (req, res) => {
         await writeJsonFile(GROUPS_FILE, groups);
         res.json({ message: 'Group updated successfully', group: groups[groupIndex] });
     } catch (error) {
-        console.error('Error updating group:', error);
+        console.error('Failed to update group:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -168,18 +159,17 @@ app.delete('/api/groups/:id', async (req, res) => {
         await writeJsonFile(GROUPS_FILE, groups);
         res.json({ message: 'Group deleted successfully' });
     } catch (error) {
-        console.error('Error deleting group:', error);
+        console.error('Failed to delete group:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Routes pour les salles
 app.get('/api/rooms', async (req, res) => {
     try {
         const rooms = await readJsonFile(ROOMS_FILE);
         res.json(rooms);
     } catch (error) {
-        console.error('Error reading rooms:', error);
+        console.error('Failed to read rooms:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -197,7 +187,7 @@ app.post('/api/rooms', async (req, res) => {
         await writeJsonFile(ROOMS_FILE, rooms);
         res.status(201).json({ message: 'Room added successfully', room: newRoom });
     } catch (error) {
-        console.error('Error adding room:', error);
+        console.error('Failed to add room:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -217,7 +207,7 @@ app.put('/api/rooms', async (req, res) => {
         await writeJsonFile(ROOMS_FILE, rooms);
         res.json({ message: 'Room updated successfully', room: rooms[roomIndex] });
     } catch (error) {
-        console.error('Error updating room:', error);
+        console.error('Failed to update room:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -234,18 +224,17 @@ app.delete('/api/rooms/:id', async (req, res) => {
         await writeJsonFile(ROOMS_FILE, rooms);
         res.json({ message: 'Room deleted successfully' });
     } catch (error) {
-        console.error('Error deleting room:', error);
+        console.error('Failed to delete room:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Routes pour les contraintes
 app.get('/api/constraints', async (req, res) => {
     try {
         const constraints = await readJsonFile(CONSTRAINTS_FILE);
         res.json(constraints);
     } catch (error) {
-        console.error('Error reading constraints:', error);
+        console.error('Failed to read constraints:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -263,7 +252,7 @@ app.post('/api/constraints', async (req, res) => {
         await writeJsonFile(CONSTRAINTS_FILE, constraints);
         res.status(201).json({ message: 'Constraint added successfully', constraint: newConstraint });
     } catch (error) {
-        console.error('Error adding constraint:', error);
+        console.error('Failed to add constraint:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -283,7 +272,7 @@ app.put('/api/constraints', async (req, res) => {
         await writeJsonFile(CONSTRAINTS_FILE, constraints);
         res.json({ message: 'Constraint updated successfully', constraint: constraints[constraintIndex] });
     } catch (error) {
-        console.error('Error updating constraint:', error);
+        console.error('Failed to update constraint:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -300,12 +289,11 @@ app.delete('/api/constraints/:id', async (req, res) => {
         await writeJsonFile(CONSTRAINTS_FILE, constraints);
         res.json({ message: 'Constraint deleted successfully' });
     } catch (error) {
-        console.error('Error deleting constraint:', error);
+        console.error('Failed to delete constraint:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Routes pour l'emploi du temps
 app.get('/api/timetable', async (req, res) => {
     try {
         const timetable = await readJsonFile(TIMETABLE_FILE);
@@ -332,7 +320,7 @@ app.get('/api/timetable', async (req, res) => {
 
         res.json(filteredTimetable);
     } catch (error) {
-        console.error('Error reading timetable:', error);
+        console.error('Failed to read timetable:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -343,7 +331,7 @@ app.get('/api/timetable/dates', async (req, res) => {
         const dates = [...new Set(timetable.map(s => s.date))].sort();
         res.json(dates);
     } catch (error) {
-        console.error('Error reading dates:', error);
+        console.error('Failed to read dates:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -364,7 +352,6 @@ app.post('/api/timetable/generate', async (req, res) => {
             return res.status(404).json({ error: 'Group not found.' });
         }
 
-        // Exemple simplifié : générer un emploi du temps fictif
         const newSessions = [
             {
                 id: timetable.length > 0 ? Math.max(...timetable.map(s => s.id)) + 1 : 1,
@@ -374,8 +361,8 @@ app.post('/api/timetable/generate', async (req, res) => {
                 teacher_name: teachers[0]?.name || 'Dr. Dupont',
                 room_id: rooms[0]?.id || 1,
                 room_name: rooms[0]?.name || 'Salle 101',
-                subject: group.subjects?.split(',')[0] || 'Mathématiques',
-                day: 'lundi',
+                subject: group.subjects?.split(',')[0] || 'Mathematics',
+                day: 'monday',
                 start_time: '08:30',
                 end_time: '10:00',
                 date
@@ -386,7 +373,7 @@ app.post('/api/timetable/generate', async (req, res) => {
         await writeJsonFile(TIMETABLE_FILE, timetable);
         res.status(201).json({ message: 'Timetable generated successfully.' });
     } catch (error) {
-        console.error('Error generating timetable:', error);
+        console.error('Failed to generate timetable:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -398,22 +385,18 @@ app.get('/api/timetable/export/:format', async (req, res) => {
         if (!['csv', 'pdf', 'ical'].includes(format)) {
             return res.status(400).json({ error: 'Unsupported format.' });
         }
-
-        // Simulation d'exportation (à implémenter selon les besoins)
-        res.json({ message: `Export to ${format} simulated.` });
+        res.json({ message: 'Export to ' + format + ' simulated.' });
     } catch (error) {
-        console.error('Error exporting timetable:', error);
+        console.error('Failed to export timetable:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Gestion des erreurs 404
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-// Démarrer le serveur
 app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+    console.log('Server listening on port ' + port);
 });
 ```
