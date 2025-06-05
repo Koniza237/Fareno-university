@@ -8,11 +8,11 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const TEACHERS_FILE = path.join(__dirname, 'teachers.json');
-const GROUPS_FILE = path.join(__dirname, 'groups.json');
-const ROOMS_FILE = path.join(__dirname, 'rooms.json');
-const CONSTRAINTS_FILE = path.join(__dirname, 'constraints.json');
-const TIMETABLE_FILE = path.join(__dirname, 'timetable.json');
+const TEACHERS_FILE = path.join(__dirname, 'data', 'teachers.json');
+const GROUPS_FILE = path.join(__dirname, 'data', 'groups.json');
+const ROOMS_FILE = path.join(__dirname, 'data', 'rooms.json');
+const CONSTRAINTS_FILE = path.join(__dirname, 'data', 'constraints.json');
+const TIMETABLE_FILE = path.join(__dirname, 'data', 'timetable.json');
 
 async function readJsonFile(filePath) {
     try {
